@@ -27,7 +27,7 @@ using Distributions
     S_t = S_0
 
     for t = 2:T
-        beta_t = 0.4 # @trace(lognormal(beta_t, 0.1), "beta_$t")
+        beta_t = @trace(lognormal(beta_t, 0.1), "beta_$t")
         R_t = R0 * beta_t
         
         individual_rate = R_t/tau
@@ -39,7 +39,7 @@ using Distributions
         p = individual_rate / Population
         combined_p = 1 - (1-p)^I_t
 
-        S2I = @trace(binom(S_t, combined_p), "S2I_$t") # susceptible to infected
+        S2I = @trace(binom(S_t, combined_p >= 0 && combined_p <= 1 ? combined_p : 0), "S2I_$t") # susceptible to infected
         I2R = @trace(binom(I_t, 1/tau), "I2R_$t") # infected to recovered
         
         S_t = S_t - S2I

@@ -4,6 +4,7 @@ using Gen
 trace = simulate(sir_model, ())
 choices = get_choices(trace)
 
+"""
 println("tau: $(choices[:tau]), R0: $(choices[:R0]), rho0: $(choices[:rho0]), rho1: $(choices[:rho1]), rho2: $(choices[:rho2]), switch_to_rho1: $(choices[:switch_to_rho1]), switch_to_rho2: $(choices[:switch_to_rho2])")
 
 touch("parameters.txt")
@@ -24,3 +25,4 @@ for t = 2:60
     write(file, "$t\t$o_t\n")
 end
 close(file)
+"""
