@@ -288,7 +288,7 @@ class frameEnv(Env):
         done = True if self.decisionStep == self.numSteps else False
         info = {}
 
-        return np.concatenate((self.shapes, self.ages)), reward, done, info
+        return np.concatenate((self.shapes, self.ages)), reward, done, info, self.trace
     
 
     def _bayesian_inference(self, draws=4000, tune=2000, targetAccept=0.9):
