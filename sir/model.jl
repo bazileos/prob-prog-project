@@ -1,13 +1,8 @@
-#include("./GenDistributions.jl")
-
 using Gen
-using Distributions
 
-#@dist lognormal(x, y) = exp(normal(log(x^2/sqrt(x^2 + y^2)), sqrt(log(1+y^2/x^2))))
-@dist lognormal(x, y) = exp(normal(x, y))
+@dist lognormal(x, y) = exp(normal(log(x), y))
 
 @gen function sir_model()
-    #lognormal = DistributionsBacked((x, y) -> LogNormal(x, y), (true,), false, Float64)
     T = 60 # duration of simulation (in days)
     Population = 600 # population size
     S_0 = 599 # susceptible part of population
@@ -27,7 +22,7 @@ using Distributions
     S_t = S_0
 
     for t = 2:T
-        beta_t = @trace(lognormal(log(beta_t), 0.1), "beta_$t")
+        beta_t = @trace(lognormal(beta_t, 0.1), "beta_$t")
         R_t = R0 * beta_t
         
         individual_rate = R_t/tau
@@ -48,6 +43,5 @@ using Distributions
         rho_to_use = t >= switch_to_rho2 ? rho2 : (t > switch_to_rho1 ? rho1 : rho0)
         
         o_t = @trace(binom(S2I, rho_to_use), "o_$t")
-        println(o_t)
     end
 end
