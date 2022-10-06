@@ -1,6 +1,6 @@
 include("./inference.jl")
 
-f = open("data.txt", "r")
+f = open("./sir/data.txt", "r")
 o ::Vector{Int} = zeros(0)
 for line in readlines(f)
     append!(o, parse(Int, split(line, "\t")[2]))
