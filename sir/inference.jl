@@ -28,3 +28,20 @@ function sir_inference(o::Vector{Int}, num_iters::Int)
     return (choices[:tau], choices[:R0], choices[:rho0], choices[:rho1], 
         choices[:rho2], choices[:switch_to_rho1], choices[:switch_to_rho2])
 end
+
+function unfold_particle_filter(num_particles::Int, os::Vector{Int}, num_samples::Int)
+    init_obs = Gen.choicemap((:chain => 1 => :obs, os[1]))
+    state = Gen.initialize_particle_filter(unfold_model, (1,), init_obs, num_particles)
+    
+    for t=2:length(os)-1
+        maybe_resample!(state, ess_threshold=num_particles/2)
+        obs = Gen.choicemap((:chain => t => :obs, os[t+1]))
+        Gen.particle_filter_step!(state, (t,), (UnknownChange(),), obs)
+    end
+
+    # return a sample of traces from the weighted collection:
+    return Gen.sample_unweighted_traces(state, num_samples)
+end;
+    
+    
+
