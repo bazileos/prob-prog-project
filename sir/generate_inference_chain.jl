@@ -5,7 +5,7 @@ using Gen
 using Random
 Random.seed!(3)
 
-T = 59
+T = 60
 (trace, _) = Gen.generate(unfold_model, (T,))
 
 choices = Gen.get_choices(trace)
@@ -16,11 +16,11 @@ o = Vector{Int}(undef, T)
 for t=1:T
     o[t] = choices[:chain => t => :obs]
 end
-print(o)
+println(o)
 
 
-@time unfold_pf_traces = unfold_particle_filter(30000, o, 1);
-cho_res = Gen.get_choices(unfold_pf_traces[1])
+@time unfold_pf_traces = unfold_particle_filter(10000, o, 100);
+cho_res = Gen.get_choices(unfold_pf_traces)
 println("tau: $(cho_res[:tau]), R0: $(cho_res[:R0]), rho0: $(cho_res[:rho0]), rho1: $(cho_res[:rho1]), rho2: $(cho_res[:rho2]), switch_to_rho1: $(cho_res[:switch_to_rho1]), switch_to_rho2: $(cho_res[:switch_to_rho2])")
 
 
