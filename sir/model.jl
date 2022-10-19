@@ -71,7 +71,7 @@ Gen.@load_generated_functions
     I_t = I_0
     S_t = S_0
 
-    for t = 1:(T-1)
+    for t = 1:T
         beta_t = @trace(lognormal(log(beta_t), 0.1), "beta_$t")
         R_t = R0 * beta_t
         

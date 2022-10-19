@@ -35,14 +35,16 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int}, num_samples
     old_obs = init_obs
     for t=2:length(os)-1
         nr_acc = 0
+        all_Nan = true
         # For each particle do a random MH walk for one of the initial parameters on all encountered observations up until now
-        for i=1:num_particles
+        for i=1:num_particles            
             initial_choices = select(:tau, :R0, :rho0, :rho1, :rho1, :rho2, :switch_to_rho1, :switch_to_rho2)
-            j = uniform_discrete(1, 8)
-            state.traces[i], _  = mh(state.traces[i], initial_choices[j], check=true, observations=old_obs)
+            state.traces[i], _  = mh(state.traces[i], initial_choices, check=true, observations=old_obs)
         end
+        mxval, mxindx = findmax(state.log_weights)
+        println("MAX value weight found : ", mxval, " ", ", iteration: ", t)
         # Resample particles if the effective sample size is below half the number of particles
-        maybe_resample!(state, ess_threshold=num_particles/2)
+        maybe_resample!(state, ess_threshold=num_particles)
         # Observation of this timestep 
         obs = Gen.choicemap((:chain => t => :obs, os[t+1]))
         # All observations encountered up until now
@@ -50,11 +52,10 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int}, num_samples
         # Particle filter step with current observation step
         Gen.particle_filter_step!(state, (t,), (UnknownChange(),), obs)
         # TODO: Remove samples that have a certain weight of NaN? Or at least do something with them/ set their weight to zero?        for i=1:num_particles
-
     end
     (_, log_normalized_weights) = Gen.normalize_weights(state.log_weights)
     weights = exp.(log_normalized_weights)
-    mxval, mxindx = findmax(weights)
+    mxval, mxindx = findmax(state.log_weights)
     print("MAP estimate weight value: ")
     println(mxval)
     return state.traces[mxindx]
