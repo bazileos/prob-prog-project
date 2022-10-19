@@ -29,7 +29,7 @@ function sir_inference(o::Vector{Int}, num_iters::Int)
         choices[:rho2], choices[:switch_to_rho1], choices[:switch_to_rho2])
 end
 
-function unfold_particle_filter(num_particles::Int, os::Vector{Int}, num_samples::Int)
+function unfold_particle_filter(num_particles::Int, os::Vector{Int})
     init_obs = Gen.choicemap((:chain => 1 => :obs, os[1]))
     state = Gen.initialize_particle_filter(unfold_model, (1,), init_obs, num_particles)
     old_obs = init_obs
@@ -42,15 +42,20 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int}, num_samples
             state.traces[i], _  = mh(state.traces[i], initial_choices, check=true, observations=old_obs)
         end
         mxval, mxindx = findmax(state.log_weights)
-        println("MAX value weight found : ", mxval, " ", ", iteration: ", t)
+        println("MAX value weight found : ", mxval, " ", ", iteration: ", t, ", obs:", os[t])
+
         # Resample particles if the effective sample size is below half the number of particles
         maybe_resample!(state, ess_threshold=num_particles)
         # Observation of this timestep 
-        obs = Gen.choicemap((:chain => t => :obs, os[t+1]))
+        obs = Gen.choicemap((:chain => t => :obs, os[t]))
+        
+        # t::Int, prev_state::State, Population::Int, tau::Int, R0::Float64, 
+        #j switch_to_rho1::Int, switch_to_rho2::Int, rho0::Float64, rho1::Float64, rho2::Float64)
         # All observations encountered up until now
         old_obs = Base.merge(init_obs, obs)
+        arg_kernel = (t, state, 600, select(:tau, :R0, :switch_to_rho1, :switch_to_rho2, :rho0, :rho1, :rho2))
         # Particle filter step with current observation step
-        Gen.particle_filter_step!(state, (t,), (UnknownChange(),), obs)
+        Gen.particle_filter_step!(state, (t,), (kernel(), arg_kernel), obs)
         # TODO: Remove samples that have a certain weight of NaN? Or at least do something with them/ set their weight to zero?        for i=1:num_particles
     end
     (_, log_normalized_weights) = Gen.normalize_weights(state.log_weights)
