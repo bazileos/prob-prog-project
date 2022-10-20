@@ -5,7 +5,6 @@ using Gen
 
 @pyimport numpy
 
-print("heyy")
 
 
 py"""
@@ -132,27 +131,24 @@ def calc_deformation(time,head,Kv,Sskv,Sske,claythick,nclay,sandthick=-1,Nt_cons
 
 @gen function geo_model(head, reference_time, observed_deformation=[-0.0, 0.06656669398346529, 0.15390143625382938, 0.1676900960863535, 0.13702130338593635, 0.1673178782642764, 0.26523515379600787, 0.3275075677243084, 0.31217034659917625, 0.3065887878443767])
     Kv ~ cauchy(-5, 3)# m/yr
-    # Sskv ~ cauchy(-3.5, 3) #m-1
-    # Sske ~ cauchy(-5, 3) #m-1
-    # nclay ~ uniform(5, .., 10)
-    # claythick=5 # m
-    # Kv ~ normal(0, 1)
-    Sskv ~ normal(0, 1)
-    Sske ~ normal(0, 1)
-    nclay ~ normal(0, 1)
+    Sskv ~ cauchy(-3.5, 3) #m-1
+    Sske ~ cauchy(-5, 3) #m-1
+    nclay ~ uniform_discrete(5,10)
     claythick=5 # m
 
     # run simulation
     t,defm,head,defm_v=py"calc_deformation"(reference_time,head,10^Kv,10^Sskv,10^Sske,claythick,nclay)
     aligned_deformation=numpy.interp(reference_time,t,defm)
-    print("aligned")
-    print(aligned_deformation)
+    println("aligned")
+
 
     # The following loop represents this method:
     # observe(aligned_deformation, Normal(observed_deformation, 2))
     # Since deformation is an array, we have to iterate over all variables.
     # @trace(aligned_deformation, :a)
-    # for (index, value) in enumerate(aligned_deformation)
-    #     @trace(aligned_deformation[index],"deformation_$index")
-    # end
+    for (index, value) in enumerate(aligned_deformation)
+        println(aligned_deformation[index])
+        # @trace(aligned_deformation[index],"d")
+    end
+    return aligned_deformation
 end 

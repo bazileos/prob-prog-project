@@ -15,11 +15,13 @@ head=(t.-t[1])*(-1)+5*np.cos(np.pi*2*t)
 
 trace = Gen.simulate(geo_model, (head,t))
 
-choices = Gen.get_choices(trace)
 
-print("SIMULATION COMPLETED")
-print(choices[:Kv])
-print(trace[:Kv])
+choices = Gen.get_choices(trace)
+println("SIMULATION COMPLETED")
+println("Kv: ", choices[:Kv])
+println("Sskv: ", choices[:Sskv])
+println("Sske: ", choices[:Sske])
+println("nclay: ", choices[:nclay])
 
 # Sskv ~ cauchy(-3.5, 3) #m-1
 # Sske ~ cauchy(-5, 3) #m-1
