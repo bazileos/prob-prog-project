@@ -1,3 +1,5 @@
 data.txt
 parameters.txt
 .history/
+**/__pycache__
+BuildingSafety/.idea/
