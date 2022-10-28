@@ -1,5 +1,6 @@
 include("./model.jl")
 using Gen
+using Statistics
 
 function sir_inference(o::Vector{Int}, num_iters::Int)
 
@@ -29,20 +30,74 @@ function sir_inference(o::Vector{Int}, num_iters::Int)
         choices[:rho2], choices[:switch_to_rho1], choices[:switch_to_rho2])
 end
 
+function visualize_traces_R0_tau(traces, num_particles, t)
+    R0 = Vector{Float64}(undef, num_particles)
+    tau = Vector{Int}(undef, num_particles)
+    switch_to_rho1 = Vector{Int}(undef, num_particles)
+    switch_to_rho2 = Vector{Int}(undef, num_particles)
+    S2I = Vector{Int}(undef, num_particles)
+    for trace_ind = 1:num_particles
+        temp_choices = Gen.get_choices(traces[trace_ind])
+        R0[trace_ind] = temp_choices[:R0]
+        tau[trace_ind] = temp_choices[:tau]
+        switch_to_rho1[trace_ind] = temp_choices[:switch_to_rho1]
+        switch_to_rho2[trace_ind] = temp_choices[:switch_to_rho2]
+        S2I[trace_ind] = temp_choices[:chain => t => :S2I]
+    end
+    mx_min, mxindx = findmin(S2I)
+    println("Timestep:", t, ", Variance R0:", var(R0), ", tau: ", var(tau), ", S21:", var(S2I), ", ", mx_min)
+end
+
+function particle_resimulation(trace)
+    initial_choice = select(:tau, :R0, :rho0, :rho1, :rho1, :rho2, :switch_to_rho1, :switch_to_rho2)
+    trace, a = metropolis_hastings(trace, initial_choice)
+    return trace
+end
+
+function particle_rejuvenation(trace, t_begin, t_now)
+    # for each timestep in the interval we want to update the state parameters
+    # most simple way is to just resample them and see if the sample is more likely
+    # beta_t, S2I, I2R
+    t_begin = max(1, t_begin)
+    nr_acc = 0
+    # Get previous state of begin timestep
+    for t = t_begin : t_now
+        sel = select(:chain => t => :beta_t, :chain => t => :S2I, :chain => t => :I2R)
+        trace, a =  mh(trace, sel)
+        if a
+            nr_acc += 1
+        end
+    end
+    # o[t] = choices[:chain => t => :obs]
+    return trace, nr_acc
+end
+
 function unfold_particle_filter(num_particles::Int, os::Vector{Int})
     init_obs = Gen.choicemap((:chain => 1 => :obs, os[1]))
     state = Gen.initialize_particle_filter(unfold_model, (1,), init_obs, num_particles)
     old_obs = init_obs
+    tau_rej = 0.00001
     for t=2:length(os)-1
         nr_acc = 0
         all_Nan = true
-        # For each particle do a random MH walk for one of the initial parameters on all encountered observations up until now
-        for i=1:num_particles            
-            initial_choices = select(:tau, :R0, :rho0, :rho1, :rho1, :rho2, :switch_to_rho1, :switch_to_rho2)
-            state.traces[i], _  = mh(state.traces[i], initial_choices, check=true, observations=old_obs)
+        if t > 2
+            println(" ========")
+            visualize_traces_R0_tau(state.traces, num_particles, t-1)
         end
-        mxval, mxindx = findmax(state.log_weights)
-        println("MAX value weight found : ", mxval, " ", ", iteration: ", t, ", obs:", os[t])
+        # For each particle do a random MH walk for one of the initial parameters on all encountered observations up until now
+        for i=1:num_particles     
+
+            # Resimulate the whole path of the trace to update the global initial parameters
+            state.traces[i] = particle_resimulation(state.traces[i])
+            
+            state.traces[i], a = particle_rejuvenation(state.traces[i], t-5, t-1)
+            if a > 0
+                nr_acc += 1
+            end
+        end
+    
+        visualize_traces_R0_tau(state.traces, num_particles, t-1)
+
 
         # Resample particles if the effective sample size is below half the number of particles
         maybe_resample!(state, ess_threshold=num_particles)
@@ -55,11 +110,15 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int})
         old_obs = Base.merge(init_obs, obs)
         arg_kernel = (t, state, 600, select(:tau, :R0, :switch_to_rho1, :switch_to_rho2, :rho0, :rho1, :rho2))
         # Particle filter step with current observation step
-        Gen.particle_filter_step!(state, (t,), (kernel(), arg_kernel), obs)
+        Gen.particle_filter_step!(state, (t,), (kernel, arg_kernel), obs)
+
+        mxval, _ = findmax(state.log_weights)
+        println("MAX value weight found : ", mxval, " ", ", iteration: ", t, ", obs:", os[t-1], ", acc:", nr_acc)
+
         # TODO: Remove samples that have a certain weight of NaN? Or at least do something with them/ set their weight to zero?        for i=1:num_particles
     end
-    (_, log_normalized_weights) = Gen.normalize_weights(state.log_weights)
-    weights = exp.(log_normalized_weights)
+    # (_, log_normalized_weights) = Gen.normalize_weights(state.log_weights)
+    # weights = exp.(log_normalized_weights)
     mxval, mxindx = findmax(state.log_weights)
     print("MAP estimate weight value: ")
     println(mxval)
