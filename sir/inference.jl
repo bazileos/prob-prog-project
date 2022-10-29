@@ -65,7 +65,7 @@ end
     I2R = 0
 
     for t = t_begin : t_now
-        beta_t = normal(trace[:chain => t => :beta_t], 0.01)
+        beta_t = normal(trace[:chain => t => :beta_t], 0.1)
         S2I = uniform_discrete(trace[:chain => t => :S2I] - 1, trace[:chain => t => :S2I] + 1)
         I2R = uniform_discrete(trace[:chain => t => :I2R] - 1, trace[:chain => t => :I2R] + 1)
     end
@@ -80,7 +80,7 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int})
     init_obs = Gen.choicemap((:chain => 1 => :obs, os[1]))
     state = Gen.initialize_particle_filter(unfold_model, (1,), init_obs, num_particles)
     old_obs = init_obs
-    tau_rej = 0.00001
+    best_trace = ""
     for t=2:length(os)-1
         nr_acc = 0
         # For each particle do a random MH walk for one of the initial parameters on all encountered observations up until now
@@ -110,18 +110,20 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int})
         arg_kernel = (t, state, 600, select(:tau, :R0, :switch_to_rho1, :switch_to_rho2, :rho0, :rho1, :rho2))
         # Particle filter step with current observation step
         Gen.particle_filter_step!(state, (t,), (kernel, arg_kernel), obs)
+        mxval, mxindx = findmax(state.log_weights)
+        if mxval != 0
+            cho_res = state.traces[mxindx]
+            best_trace = "tau: $(cho_res[:tau]), R0: $(cho_res[:R0]), rho0: $(cho_res[:rho0]), rho1: $(cho_res[:rho1]), rho2: $(cho_res[:rho2]), switch_to_rho1: $(cho_res[:switch_to_rho1]), switch_to_rho2: $(cho_res[:switch_to_rho2])"
+        end
+        println("MAX value weight found : ", mxval, ", iteration: ", t, ", obs:", os[t], ", acc:", nr_acc)
 
-        mxval, _ = findmax(state.log_weights)
-        println("MAX value weight found : ", mxval, " ", ", iteration: ", t, ", obs:", os[t-1], ", acc:", nr_acc)
-
-        # TODO: Remove samples that have a certain weight of NaN? Or at least do something with them/ set their weight to zero?        for i=1:num_particles
     end
     # (_, log_normalized_weights) = Gen.normalize_weights(state.log_weights)
     # weights = exp.(log_normalized_weights)
-    mxval, mxindx = findmax(state.log_weights)
-    print("MAP estimate weight value: ")
-    println(mxval)
-    return state.traces[mxindx]
+    # mxval, mxindx = findmax(old_weights)
+    # print("MAP estimate weight value: ")
+    # println(mxval)
+    return best_trace
 end
     
     
