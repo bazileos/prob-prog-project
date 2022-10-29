@@ -54,22 +54,26 @@ function particle_resimulation(trace)
     return trace
 end
 
-function particle_rejuvenation(trace, t_begin, t_now)
+@gen function state_proposal(trace, t_begin, t_now)
+    t_begin = max(1, t_begin)
+
     # for each timestep in the interval we want to update the state parameters
     # most simple way is to just resample them and see if the sample is more likely
     # beta_t, S2I, I2R
-    t_begin = max(1, t_begin)
-    nr_acc = 0
-    # Get previous state of begin timestep
+    beta_t = 0.0
+    S2I = 0
+    I2R = 0
+
     for t = t_begin : t_now
-        sel = select(:chain => t => :beta_t, :chain => t => :S2I, :chain => t => :I2R)
-        trace, a =  mh(trace, sel)
-        if a
-            nr_acc += 1
-        end
+        beta_t = normal(trace[:chain => t => :beta_t], 0.01)
+        S2I = uniform_discrete(trace[:chain => t => :S2I] - 1, trace[:chain => t => :S2I] + 1)
+        I2R = uniform_discrete(trace[:chain => t => :I2R] - 1, trace[:chain => t => :I2R] + 1)
     end
-    # o[t] = choices[:chain => t => :obs]
-    return trace, nr_acc
+    return beta_t, S2I, I2R
+end
+
+function particle_rejuvenation(trace, t_begin, t_now)
+    return Gen.metropolis_hastings(trace, state_proposal, (t_begin, t_now))
 end
 
 function unfold_particle_filter(num_particles::Int, os::Vector{Int})
@@ -79,11 +83,6 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int})
     tau_rej = 0.00001
     for t=2:length(os)-1
         nr_acc = 0
-        all_Nan = true
-        if t > 2
-            println(" ========")
-            visualize_traces_R0_tau(state.traces, num_particles, t-1)
-        end
         # For each particle do a random MH walk for one of the initial parameters on all encountered observations up until now
         for i=1:num_particles     
 
@@ -96,7 +95,7 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int})
             end
         end
     
-        visualize_traces_R0_tau(state.traces, num_particles, t-1)
+        # visualize_traces_R0_tau(state.traces, num_particles, t-1)
 
 
         # Resample particles if the effective sample size is below half the number of particles
