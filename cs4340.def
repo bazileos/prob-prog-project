@@ -2,7 +2,7 @@ Bootstrap: docker
 From: julia:1.8.2-bullseye
 
 %post
-    julia -e 'import Pkg; Pkg.add(["Gen", "StatsBase", "PyCall", "Conda", "Plots"]);'
+    julia -e 'import Pkg; Pkg.add(["Gen", "StatsBase", "PyCall", "Conda", "Plots", "Distributions"]);'
     julia -e 'using Conda; Conda.add(["scipy=1.8", "matplotlib", "seaborn", "gym"]);'
 
 #%runscript
