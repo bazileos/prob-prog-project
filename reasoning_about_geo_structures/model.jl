@@ -19,11 +19,11 @@ using Gen
         t,defm,_,_=py"calc_deformation"(reference_time,head,10^Kv,10^Sskv,10^Sske,claythick,nclay)
 
         aligned_deformation=numpy.interp(reference_time,t,defm)
-
+        print(aligned_deformation)
         # The following loop represents this method:
         # observe(observed_deformation, Normal(aligned_deformation, 2))
         for (index, value) in enumerate(aligned_deformation)
-            push!(o, {(:obs, index)} ~ normal(value, 0.01))
+            push!(o, {(:obs, index)} ~ normal(value, 0.001))
             
         end
     catch _

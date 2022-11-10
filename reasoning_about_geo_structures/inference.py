@@ -1,6 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import sys
+from scipy.optimize import minimize
 
 def calc_deformation(time,head,Kv,Sskv,Sske,claythick,nclay,sandthick=-1,Nt_const=70): # this calculates deformation for a single clay layer of user=defined thickness
     # Use whatever units for time and length as desired, but they need to stay consistent
@@ -113,7 +113,6 @@ def calc_deformation(time,head,Kv,Sskv,Sske,claythick,nclay,sandthick=-1,Nt_cons
 
 
 
-from scipy.optimize import minimize
 
 
 def inference(ref_time, head, obs, max_iter=10):
@@ -122,7 +121,7 @@ def inference(ref_time, head, obs, max_iter=10):
     best_rsme = None
     best_params = [Kv_init, Sskv_init, Sske_init]
     best_n_clay = 0
-    for n_clay_init in range(5, 10):
+    for n_clay_init in range(5, 11):
 
         def calc_residual(params, claythick=5):
             time, defm, _, _ = calc_deformation(ref_time, head, 10 ** params[0], 10 ** params[1], 10 ** params[2],
@@ -134,14 +133,13 @@ def inference(ref_time, head, obs, max_iter=10):
             return rmse
 
         initial_parameters = [Kv_init, Sskv_init, Sske_init]
-        parameters=minimize(calc_residual,initial_parameters, options={'maxiter':20}) # setting the maximum iterations to a low number so it doesn't take forever
+        parameters=minimize(calc_residual,initial_parameters, method="Nelder-Mead",options={'maxiter':it_per_n_clay_value}) # setting the maximum iterations to a low number so it doesn't take forever
         rmse = calc_residual(parameters.x)
 
         if best_rsme is None or rmse < best_rsme:
             best_rsme = rmse
             best_params = parameters.x
             best_n_clay = n_clay_init
-            print("Better parameters found: ", best_params, ", ", n_clay_init)
     return best_params, best_n_clay
 
 
@@ -154,13 +152,12 @@ if __name__ == "__main__":
     ref_time = [float(x) for x in line_1.split()]
     head = [float(x) for x in line_2.split()]
     obs_def = [float(x) for x in line_3.split()]
-    params, n_clay = inference(ref_time, head, obs_def, max_iter=10)
-    time, defm, _, _ = calc_deformation(ref_time, head, 10 ** params[0], 10 ** params[1], 10 ** params[2],
-                                        5, n_clay)
-    # compare with synthetic 'true' data
-    plt.figure();
-    plt.plot(time, defm);
-    plt.scatter(ref_time, obs_def, s=1, c='r')
-    plt.legend(['estimated deformation', 'observed'])
-    plt.show()
+    params, n_clay = inference(ref_time, head, obs_def, max_iter=int(it))
+    print(f"Kv: {params[0]}, Sskv: {params[1]}, Sske: {params[2]}, nclay: {n_clay}")
+    # # compare with synthetic 'true' data
+    # plt.figure();
+    # plt.plot(time, defm);
+    # plt.scatter(ref_time, obs_def, s=1, c='r')
+    # plt.legend(['estimated deformation', 'observed'])
+    # plt.show()
 
