@@ -5,12 +5,13 @@ include("./model.jl")
 
 # print(np.linspace(2000,2020,1000))
 nr_of_samples = 100
-t = collect(range(2000, 2020, length=nr_of_samples))
-head = map((x) -> (x-t[1])*-1+5*cos(pi*2*x), t)
-println(t)
+nr_of_iterations = 100
+ref_time = collect(range(2000, 2020, length=nr_of_samples))
+head = map((x) -> (x-ref_time[1])*-1+5*cos(pi*2*x), ref_time)
+println(ref_time)
 println(head)
 
-trace = Gen.simulate(geo_model, (head,t))
+trace = Gen.simulate(geo_model, (ref_time, head))
 choices = Gen.get_choices(trace)
 
 o = Vector{Float32}(undef, nr_of_samples)
@@ -22,7 +23,7 @@ end
 touch("./reasoning_about_geo_structures/data.txt")
 file = open("./reasoning_about_geo_structures/data.txt", "w")
 for s=1:nr_of_samples
-    time_stamp = t[s]
+    time_stamp = ref_time[s]
     if s == nr_of_samples
         write(file, "$time_stamp")
     else
