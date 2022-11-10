@@ -2,7 +2,7 @@ using Gen
 
 @dist lognormal(x, y) = exp(normal(log(x), y))
 
-@gen function sir_model()
+@gen (trace, _) = generate(sir_model, (), constraints)function sir_model()
     T = 60 # duration of simulation (in days)
     Population = 600 # population size
     S_0 = 599 # susceptible part of population
