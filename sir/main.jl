@@ -8,5 +8,5 @@ for line in readlines(f)
 end
 close(f)
 nr_par = parse(Int, nr_particles)
-@time result = unfold_particle_filter(nr_par, o);
+result = unfold_particle_filter(nr_par, o);
 println(result)

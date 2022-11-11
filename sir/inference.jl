@@ -115,8 +115,6 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int})
             cho_res = state.traces[mxindx]
             best_trace = "tau: $(cho_res[:tau]), R0: $(cho_res[:R0]), rho0: $(cho_res[:rho0]), rho1: $(cho_res[:rho1]), rho2: $(cho_res[:rho2]), switch_to_rho1: $(cho_res[:switch_to_rho1]), switch_to_rho2: $(cho_res[:switch_to_rho2])"
         end
-        println("MAX value weight found : ", mxval, ", iteration: ", t, ", obs:", os[t], ", acc:", nr_acc)
-
     end
     # (_, log_normalized_weights) = Gen.normalize_weights(state.log_weights)
     # weights = exp.(log_normalized_weights)

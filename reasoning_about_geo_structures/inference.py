@@ -1,3 +1,4 @@
+
 import numpy as np
 import sys
 from scipy.optimize import minimize
@@ -143,12 +144,11 @@ def inference(ref_time, head, obs, max_iter=10):
     return best_params, best_n_clay
 
 
-if __name__ == "__main__":
-    f = open(sys.argv[1], "r")
+def perform_inf(file, it):
+    f = open(file, "r")
     line_1 = f.readline()
     line_2 = f.readline()
     line_3 = f.readline()
-    it = sys.argv[2]
     ref_time = [float(x) for x in line_1.split()]
     head = [float(x) for x in line_2.split()]
     obs_def = [float(x) for x in line_3.split()]
