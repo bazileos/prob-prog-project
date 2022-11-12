@@ -1,8 +1,8 @@
 using PyCall
 using Gen
 
-pushfirst!(pyimport("sys")."path", "./building_safety/")
-@pyinclude("./building_safety/building_safety.py")
+pushfirst!(pyimport("sys")."path", "/mnt/building_safety/")
+@pyinclude("/mnt/building_safety/building_safety.py")
 np = pyimport("numpy")
 
 @dist lognormal(x, y) = exp(normal(x, y))
