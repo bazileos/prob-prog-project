@@ -4,7 +4,7 @@ include("./write_to_file.jl")
 
 using Gen
 using Random
-Random.seed!(3)
+Random.seed!(11)
 
 T = 59
 (trace, _) = Gen.generate(unfold_model, (T,))
@@ -21,9 +21,9 @@ end
 println(o)
 
 
-unfold_pf_traces = unfold_particle_filter(5000, o);
-cho_res = Gen.get_choices(unfold_pf_traces)
-println("tau: $(cho_res[:tau]), R0: $(cho_res[:R0]), rho0: $(cho_res[:rho0]), rho1: $(cho_res[:rho1]), rho2: $(cho_res[:rho2]), switch_to_rho1: $(cho_res[:switch_to_rho1]), switch_to_rho2: $(cho_res[:switch_to_rho2])")
+# unfold_pf_traces = unfold_particle_filter(5000, o);
+# cho_res = Gen.get_choices(unfold_pf_traces)
+# println("tau: $(cho_res[:tau]), R0: $(cho_res[:R0]), rho0: $(cho_res[:rho0]), rho1: $(cho_res[:rho1]), rho2: $(cho_res[:rho2]), switch_to_rho1: $(cho_res[:switch_to_rho1]), switch_to_rho2: $(cho_res[:switch_to_rho2])")
 
 
 

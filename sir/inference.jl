@@ -79,7 +79,6 @@ end
 function unfold_particle_filter(num_particles::Int, os::Vector{Int})
     init_obs = Gen.choicemap((:chain => 1 => :obs, os[1]))
     state = Gen.initialize_particle_filter(unfold_model, (1,), init_obs, num_particles)
-    old_obs = init_obs
     best_trace = ""
     for t=2:length(os)-1
         nr_acc = 0
@@ -106,7 +105,6 @@ function unfold_particle_filter(num_particles::Int, os::Vector{Int})
         # t::Int, prev_state::State, Population::Int, tau::Int, R0::Float64, 
         #j switch_to_rho1::Int, switch_to_rho2::Int, rho0::Float64, rho1::Float64, rho2::Float64)
         # All observations encountered up until now
-        old_obs = Base.merge(init_obs, obs)
         arg_kernel = (t, state, 600, select(:tau, :R0, :switch_to_rho1, :switch_to_rho2, :rho0, :rho1, :rho2))
         # Particle filter step with current observation step
         Gen.particle_filter_step!(state, (t,), (kernel, arg_kernel), obs)

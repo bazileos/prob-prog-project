@@ -118,7 +118,7 @@ def calc_deformation(time,head,Kv,Sskv,Sske,claythick,nclay,sandthick=-1,Nt_cons
 
 def inference(ref_time, head, obs, max_iter=10):
     it_per_n_clay_value = int(max_iter / 5)
-    Kv_init, Sskv_init, Sske_init = -5.0, -3.0, -5.0
+    Kv_init, Sskv_init, Sske_init = -5.0, -3.5, -5.0
     best_rsme = None
     best_params = [Kv_init, Sskv_init, Sske_init]
     best_n_clay = 0
