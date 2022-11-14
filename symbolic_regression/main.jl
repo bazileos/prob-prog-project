@@ -6,8 +6,8 @@ function run(file_path::String, num_iter::Integer)
 
     f = open(file_path, "r")
     for line in readlines(f)
-        append!(xs, parse(Float64, split(line, "\t")[1]))
-        append!(ys, parse(Float64, split(line, "\t")[2]))
+        append!(xs, parse(Float64, split(line, ";")[1]))
+        append!(ys, parse(Float64, split(line, ";")[2]))
     end
     close(f)
 

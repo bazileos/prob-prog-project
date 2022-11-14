@@ -29,11 +29,13 @@ struct Constant <: LeafNode
 end
 
 eval_ae(node::Constant, xs::Vector{Float64}) = fill(node.c, length(xs))
+string_ae(node::Constant) = string(node.c)
 
 # Identity
 struct Identity <: LeafNode end
 
 eval_ae(node::Identity, xs::Vector{Float64}) = xs
+string_ae(node::Identity) = "x"
 
 # Addition
 struct Plus <: BinaryOpNode
@@ -43,6 +45,7 @@ end
 
 Plus(left, right) = Plus(left, right)
 eval_ae(node::Plus, xs::Vector{Float64}) = eval_ae(node.left, xs) .+ eval_ae(node.right, xs)
+string_ae(node::Plus) = "(+ "*string_ae(node.left)*" "*string_ae(node.right)*")" 
 
 # Substraction
 struct Minus <: BinaryOpNode
@@ -52,6 +55,7 @@ end
 
 Minus(left, right) = Minus(left, right)
 eval_ae(node::Minus, xs::Vector{Float64}) = eval_ae(node.left, xs) .- eval_ae(node.right, xs)
+string_ae(node::Minus) = "(- "*string_ae(node.left)*" "*string_ae(node.right)*")" 
 
 # Multiplication
 struct Multiply <: BinaryOpNode
@@ -61,6 +65,7 @@ end
 
 Multiply(left, right) = Multiply(left, right)
 eval_ae(node::Multiply, xs::Vector{Float64}) = eval_ae(node.left, xs) .* eval_ae(node.right, xs)
+string_ae(node::Multiply) = "(* "*string_ae(node.left)*" "*string_ae(node.right)*")" 
 
 # Division
 struct Divide <: BinaryOpNode
@@ -70,6 +75,7 @@ end
 
 Divide(left, right) = Divide(left, right)
 eval_ae(node::Divide, xs::Vector{Float64}) = eval_ae(node.left, xs) ./ eval_ae(node.right, xs)
+string_ae(node::Divide) = "(/ "*string_ae(node.left)*" "*string_ae(node.right)*")" 
 
 # Power
 struct Power <: BinaryOpNode
@@ -78,6 +84,7 @@ struct Power <: BinaryOpNode
 end
 
 Power(left, right) = Power(left, right)
+string_ae(node::Power) = "(^ "*string_ae(node.left)*" "*string_ae(node.right)*")" 
 
 function eval_ae(node::Power, xs::Vector{Float64})
     try
@@ -250,7 +257,7 @@ function find_and_print_expressions(xs::Vector{Float64}, ys::Vector{Float64}, nu
     solutions = find_expressions(xs, ys, num_iter)
     n = length(solutions)
     for i = 1:n
-        println(solutions[i][1])
+        println(string_ae(solutions[i][1]))
     end
     solutions
 end

@@ -40,11 +40,15 @@ singularity run --bind [REPOSITORY_PATH]:/mnt cs4340.sif /mnt/sir.jl /mnt/[INPUT
 singularity run --bind [REPOSITORY_PATH]:/mnt cs4340.sif /mnt/sr.jl /mnt/[INPUT_FILE] 500
 ```
 
+The X-Y value pairs in the rows of the file are `;` separated.
+
 ### Building Safety
 
 ```sh
 singularity run --bind [REPOSITORY_PATH]:/mnt cs4340.sif /mnt/building.jl /mnt/[INPUT_FILE] 100
 ```
+
+The observations for the 6 components in the rows of the file are `;` separated.
 
 ### Reasoning about Geological Structures
 
